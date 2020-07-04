@@ -1,0 +1,22 @@
+{:deps {integrant {:mvn/version "0.8.0"}
+        com.fzakaria/slf4j-timbre {:mvn/version "0.3.19"}
+        com.taoensso/timbre {:mvn/version "4.10.0"}
+        org.sysfoundry/sf.jdbc.cp {:local/root "../modules/sf.jdbc.cp"}
+        org.sysfoundry/sf.http.server {:local/root "../modules/sf.http.server"}
+        org.sysfoundry/sf.oas.v3 {:local/root "../modules/sf.oas.v3"}
+        org.sysfoundry/sf.system {:local/root "../modules/sf.system"}
+        org.postgresql/postgresql {:mvn/version "42.2.12"}
+        honeysql {:mvn/version "1.0.444"}
+        seancorfield/next.jdbc {:mvn/version "1.0.462"}
+        metosin/malli {:mvn/version "0.0.1-SNAPSHOT"}
+        }
+
+ :aliases {:uberjar {:extra-deps {uberdeps {:mvn/version "0.1.4"}}
+                     :main-opts ["-m" "uberdeps.uberjar" "--target" "target/svc-decision-center-0.1.0.jar"]}
+           :dev {:extra-deps {integrant/repl {:mvn/version "0.3.1"}}}
+           }
+ 
+ 
+ 
+
+ :paths ["src" "resources"]}

@@ -1,0 +1,19 @@
+{
+ ;;temporary config for prod.
+ :org.sysfoundry.db/config #include #join [#env HOME "/.secrets.edn"]
+ 
+ :org.sysfoundry/system 
+ {
+  
+  :org.sysfoundry.jdbc.cp/hikari-cp #profile {
+                                  :dev {:username "postgres" :password "pgadmin"}
+                                  :prod #ref [:org.sysfoundry.db/config]
+                                  }
+  
+  :org.sysfoundry.dc.pgdb.namespace-repo/pgdb-namespace-repo {:datasource #ig/ref :org.sysfoundry.jdbc.cp/hikari-cp}
+
+  :org.sysfoundry.oas.v3/request-handler nil ;;lets use the defaults for now
+     
+  :org.sysfoundry.http.server/listener {:org.sysfoundry.http.server/request-handler #ig/ref :org.sysfoundry.oas.v3/request-handler}
+  }
+ }

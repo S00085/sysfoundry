@@ -1,0 +1,12 @@
+{:deps {
+        com.reprezen.kaizen/openapi-parser {:mvn/version "4.0.4"}
+        org.clojure/data.json {:mvn/version "1.0.0"}
+        org.clojure/java.data {:mvn/version "1.0.78"}
+        com.taoensso/timbre {:mvn/version "4.10.0"}
+        com.fzakaria/slf4j-timbre {:mvn/version "0.3.19"}
+        metosin/reitit-ring {:mvn/version "0.5.2"}
+        org.webjars/swagger-ui {:mvn/version "3.27.0"}
+        }
+ :paths ["src" "resources"]
+ }
+

@@ -6,8 +6,25 @@ info:
   The decision center service provides a way to define system wide rules, test and query them.' 
 components:
   schemas:
-    Rules:
+    Errors:
+      type: array
+      items:
+        $ref: "#/components/schemas/Error"
+    Error:
       type: object
+      required:
+        - code
+        - description
+        - data
+      properties:
+        code:
+          type: string
+        description:
+          type: string
+        data:
+          type: object
+    Rules:
+      type: array
       items:
         $ref: "#/components/schemas/Rule"
     Rule:
@@ -55,7 +72,7 @@ paths:
   /dc/api/namespaces:
     get:
       tags:
-        - namespace
+        - namespaces
       summary: Retrieve all the namespaces defined in decision center
       operationId: org.sysfoundry.dc.svc/list-namespaces
       responses:
@@ -67,11 +84,108 @@ paths:
                 $ref:  "#/components/schemas/Namespaces"
     post:
       tags:
-        - namespace
+        - namespaces
       summary: Create new namespaces in the decision center
       operationId: org.sysfoundry.dc.svc/create-namespaces
       responses:
-        '200':
+        '201':
           description: Successful creation of the provided namespaces
-        ''
+        '409':
+          description: One or more namespaces already exists or defined
+          content:
+            application/edn:
+              schema:
+                $ref: "#/components/schemas/Errors"
+    put:
+        tags:
+          - namespaces
+        summary: Update a set of namespaces already defined in the systems
+        operationId: org.sysfoundry.dc.svc/update-namespaces
+        responses:
+          '200':
+            description: Indicates successful update of the provided namespaces
+          '404':
+            description: Indicates one or more of the namespaces are not found in the system
+            content:
+              application/edn:
+                schema:
+                  $ref: "#/components/schemas/Errors"
+    delete:
+        tags:
+          - namespaces
+        summary: Delete a set of namespaces already defined in the systems
+        operationId: org.sysfoundry.dc.svc/delete-namespaces
+        responses:
+          '200':
+            description: Indicates successful delete of the provided namespaces
+          '404':
+            description: Indicates one or more of the namespaces are not found in the system
+            content:
+              application/edn:
+                schema:
+                  $ref: "#/components/schemas/Errors"
+  
+  /dc/api/namespaces/{namespace-name}:
+    get:
+      tags:
+        - namespace
+      summary: Retrieve details of a given namespace
+      operationId: org.sysfoundry.dc.svc/get-namespace-details
+      parameters:
+        - name: namespace-name
+          in: path
+          required: true
+          description: The Name of the namespace to retrieve
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Details of the given namespace
+          content:
+            application/edn:
+              schema:
+                $ref: "#/components/schemas/Namespace"
+        '404':
+          description: Indicates that the given namespace does not exist
+    put:
+      tags:
+        - namespace
+      summary: Update details of a given namespace
+      operationId: org.sysfoundry.dc.svc/update-namespace-details
+      parameters:
+        - name: namespace-name
+          in: path
+          required: true
+          description: The Name of the namespace to update
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Indicates that the specified namespace was updated. Returns the details of the updated namespace
+          content:
+            application/edn:
+              schema:
+                $ref: "#/components/schemas/Namespace"
+        '404':
+          description: Indicates that the given namespace does not exist
+    delete:
+      tags:
+        - namespace
+      summary: Delete details of a given namespace
+      operationId: org.sysfoundry.dc.svc/delete-namespace-details
+      parameters:
+        - name: namespace-name
+          in: path
+          required: true
+          description: The Name of the namespace to delete
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Indicates that the specified namespace was deleted.
+        '404':
+          description: Indicates that the given namespace does not exist
+                  
+
+        
               

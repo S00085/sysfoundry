@@ -15,6 +15,22 @@
 (defn create-namespaces [request]
   {:status 200 :body "Create new namespaces in the system"})
 
+(defn update-namespaces [request]
+  {:status 200 :body "Update Namespaces in the system"})
+
+(defn delete-namespaces [request]
+  {:status 200 :body "Delete namespaces in the system"})
+
+(defn get-namespace-detail [request]
+  {:status 200 :body "Get details of a given namespace in the system"}
+  )
+
+(defn update-namespace-detail [request]
+  {:status 200 :body "Update details of a given namespace in the system"})
+
+(defn delete-namespace-detail [request]
+  {:status 200 :body "Deletes details of a given namespace in the system"})
+
 
 (defn -main [& args]
   (logger/info "Starting Decision center service...")

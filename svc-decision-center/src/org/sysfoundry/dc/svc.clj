@@ -12,6 +12,9 @@
   {:status 200 :body "List all namespaces in the system"}
   )
 
+(defn create-namespaces [request]
+  {:status 200 :body "Create new namespaces in the system"})
+
 
 (defn -main [& args]
   (logger/info "Starting Decision center service...")

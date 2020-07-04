@@ -8,7 +8,9 @@
   )
 
 
-
+(defn list-namespaces [request]
+  {:status 200 :body "List all namespaces in the system"}
+  )
 
 
 (defn -main [& args]

@@ -2,3 +2,42 @@ openapi: 3.0.3
 info:
   title: Decision Center
   version: 1.0.0
+  description: 'Decision Center is a centralized rule repository service for a system or solution.
+  The decision center service provides a way to define system wide rules, test and query them.' 
+components:
+  schemas:
+    Namespaces:
+      type: array
+      items:
+        $ref: "#/components/schemas/Namespace"
+
+    Namespace:
+      type: object
+      required:
+        - name
+        - active
+      properties:
+        name:
+          type: string
+          example: org.sysfoundry.test.domain1
+        active:
+          type: boolean
+          example: true
+        doc:
+          type: string
+          example: Test namespace for sysfoundry domain1
+paths:
+  /dc/api/namespaces:
+    get:
+      tags:
+        - namespace
+      summary: Retrieve all the namespaces defined in decision center
+      operationId: org.sysfoundry.dc.svc/list-namespaces
+      responses:
+        '200':
+          description: A paged array of namespaces
+          content:
+            application/edn:
+              schema:
+                $ref:  "#/components/schemas/Namespaces"
+            

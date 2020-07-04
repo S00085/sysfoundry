@@ -6,6 +6,26 @@ info:
   The decision center service provides a way to define system wide rules, test and query them.' 
 components:
   schemas:
+    Rules:
+      type: object
+      items:
+        $ref: "#/components/schemas/Rule"
+    Rule:
+      type: object
+      required:
+        - account
+        - name
+        - namespace
+        - active
+      properties:
+        account:
+          type: string
+        name:
+          type: string
+        namespace:
+          type: string
+        active:
+          type: boolean  
     Namespaces:
       type: array
       items:
@@ -14,10 +34,15 @@ components:
     Namespace:
       type: object
       required:
+        - account
         - name
         - active
       properties:
+        account:
+          description: The Account to which the namespace belongs
+          type: string
         name:
+          description: The identifier of the namespace
           type: string
           example: org.sysfoundry.test.domain1
         active:
@@ -40,4 +65,13 @@ paths:
             application/edn:
               schema:
                 $ref:  "#/components/schemas/Namespaces"
-            
+    post:
+      tags:
+        - namespace
+      summary: Create new namespaces in the decision center
+      operationId: org.sysfoundry.dc.svc/create-namespaces
+      responses:
+        '200':
+          description: Successful creation of the provided namespaces
+        ''
+              

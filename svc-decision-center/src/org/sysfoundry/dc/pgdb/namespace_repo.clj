@@ -7,6 +7,9 @@
             )
   )
 
+(def dc-namespace-name "org.sysfoundry.dc.namespace")
+(def gen-namespace-name "org.sysfoundry.gen.comms")
+
 (defn- on-exception-response
   [e]
   (comms/failure (str "Error occured : " (.getMessage e))))
@@ -45,15 +48,15 @@
                               updated-page-info (assoc page-info :paging/total-pages (compute-page-count total-count page-size) :paging/total-count total-count)
                               results (->> (s/list-namespaces-sql account query order-by updated-page-info)
                                            (j/execute! tx)
-                                           (comms/map-rows-to-ns "sf.dc.ns"))
+                                           (comms/map-rows-to-ns dc-namespace-name))
                               updated-page-info-final (assoc updated-page-info :paging/current-count (count results))
-                              result-map {:sf.dc.ns/namespaces results :paging/page-info updated-page-info-final}]
+                              result-map {::nspace/namespaces results :paging/page-info updated-page-info-final}]
                           (comms/success result-map))
                        #(comms/failure %)))
 
     (->> (s/list-namespaces-sql account query order-by page-info)
          (j/execute! tx)
-         (comms/map-rows-to-ns "sf.dc.ns")
+         (comms/map-rows-to-ns dc-namespace-name)
          comms/success)))
 
 (defn- create-namespace-internal
@@ -68,7 +71,7 @@
       (->> (s/new-namespace-sql account stripped-ns-def)
            (j/execute-one! tx)
            comms/strip-ns-from-keys
-           (comms/map-keys-to-ns2 "sf.gen.comms")
+           (comms/map-keys-to-ns2 gen-namespace-name)
            comms/success)
       (throw (Exception. (str "Namespace : " ns-name " is already defined!"))))))
 
@@ -101,7 +104,7 @@
                            (->> (s/update-namespace-sql account update-map query)
                                 (j/execute-one! tx)
                                 comms/strip-ns-from-keys
-                                (comms/map-keys-to-ns2 "sf.gen.comms")
+                                (comms/map-keys-to-ns2 gen-namespace-name)
                                 comms/success)) datasource)
                        (catch Exception e
                          (on-exception-response e))))
@@ -114,14 +117,14 @@
                              (comms/on-status search-result
                                               (fn [success-data]
                                                 (let [active-namespaces (filter (fn [ns-m]
-                                                                                  (:sf.dc.ns/active ns-m)) success-data)]
+                                                                                  (::nspace/active ns-m)) success-data)]
                                                   (if (> (count active-namespaces) 0)
                                                     (comms/failure
-                                                     #:sf.gen.comms{:error :sf.dc.ns/attempt-to-delete-active-ns :error-data active-namespaces})
+                                                     #:org.sysfoundry.gen.comms{:error ::nspace/attempt-to-delete-active-ns :error-data active-namespaces})
                                                     (->> (s/delete-namespace-sql account query)
                                                          (j/execute-one! tx)
                                                          comms/strip-ns-from-keys
-                                                         (comms/map-keys-to-ns2 "sf.gen.comms")
+                                                         (comms/map-keys-to-ns2 gen-namespace-name)
                                                          comms/success))))
                                               (fn [failure-data]
                                                 (comms/failure failure-data))))) datasource)

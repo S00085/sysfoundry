@@ -1,55 +1,20 @@
 (ns org.sysfoundry.dc.namespace
-  (:require [malli.core :as m]
-            [malli.error :as me]
-            [org.sysfoundry.gen.comms :as c]
-            )
+  (:require
+   [schema.core :as s]
+   [org.sysfoundry.gen.comms :as c])
   )
 
-(defn err-msg-for-strings
-  [{:keys [value]} _]
-  (str value ", is not a valid string of min length 1 character")
-  )
 
-;;malli spec for namespace
-;;
 (def namespace-schema
-  [:map 
-   {:title "namespace"
-    :description "Decision center's namespace"
-    :json-schema/example {::name "test.ns" ::doc "Test ns doc blah blah" ::active true}}
-   [::name [:string {:min 1 :max 250}]]
-   [::doc [:string {:min 1 :max 500}]]
-   [::active boolean?]
-   ]
+  {
+   ::name s/Str
+   (s/optional-key ::doc) s/Str
+   ::active s/Bool
+   }
   )
 
-;;malli spec used for APIs temporarily till reitit supports 
-;;the above spec version
-(def ns-schema
- [:map
-  [::name string?]
-  [::doc string?]
-  [::active boolean?]]
-  )
-
-(comment (def valid?
-           (m/validator namespace-schema)))
-
-(defn validate 
-  "Validate whether the provided namespace definition is as per the namespace schema. 
-   Success or Failure is communicated with the standard comms approach "
-  [namespace-def]
-  (let [result (some->> namespace-def
-                       (m/explain namespace-schema)
-                       me/humanize
-                       )]
-    (if (nil? result)
-      ;;the validation was successful
-      (c/success nil)
-      ;;the validation was a failure
-      (c/failure result)
-      )
-    )
+(def namespaces-schema
+  [namespace-schema]
   )
 
 ;;NamespaceRepo protocol definition

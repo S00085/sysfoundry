@@ -68,6 +68,28 @@ components:
         doc:
           type: string
           example: Test namespace for sysfoundry domain1
+    
+    NewNamespaces:
+      type: array
+      items:
+        $ref: "#/components/schemas/NewNamespace"
+    NewNamespace:
+      type: object
+      required:
+        - name
+        - active
+      properties:
+        name:
+          description: The identifier of the namespace
+          type: string
+          example: org.sysfoundry.test.domain1
+        active:
+          type: boolean
+          example: true
+        doc:
+          type: string
+          example: Test namespace for sysfoundry domain1
+        
 paths:
   /dc/api/namespaces:
     get:
@@ -75,10 +97,55 @@ paths:
         - namespaces
       summary: Retrieve all the namespaces defined in decision center
       operationId: org.sysfoundry.dc.svc/list-namespaces
+      parameters:
+        - name: account
+          in: header
+          required: true
+          allowEmptyValue: false
+          description: The Account to which the namespace information belongs to
+          example: "ac1"
+          schema:
+            type: string
+        - name: query
+          in: query
+          required: false
+          description: An array of keywords and namespace attributes
+          example: "[:= :name \"test.ns\"]"
+          schema:
+            type: array
+            items:
+              type: string
+        - name: sort
+          in: query
+          required: false
+          description: An array of keywords of namespace attributes
+          example: "[:name :doc]"
+          schema:
+            type: array
+            items:
+              type: string
+        - name: page
+          in: query
+          required: false
+          description: The page number to request for
+          example: 1
+          schema:
+            type: integer
+        - name: size
+          in: query
+          required: false
+          description: The number of records per page
+          example: 10
+          schema:
+            type: integer
+
       responses:
         '200':
           description: A paged array of namespaces
           content:
+            application/json:
+              schema:
+                $ref:  "#/components/schemas/Namespaces"
             application/edn:
               schema:
                 $ref:  "#/components/schemas/Namespaces"
@@ -87,6 +154,16 @@ paths:
         - namespaces
       summary: Create new namespaces in the decision center
       operationId: org.sysfoundry.dc.svc/create-namespaces
+      requestBody:
+        description: The list of namespaces to create
+        required: true
+        content:
+          application/edn:
+            schema:
+              $ref: "#/components/schemas/NewNamespaces"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewNamespaces"
       responses:
         '201':
           description: Successful creation of the provided namespaces

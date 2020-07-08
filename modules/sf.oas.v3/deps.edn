@@ -5,7 +5,10 @@
         com.taoensso/timbre {:mvn/version "4.10.0"}
         com.fzakaria/slf4j-timbre {:mvn/version "0.3.19"}
         metosin/reitit-ring {:mvn/version "0.5.2"}
+        metosin/reitit-middleware {:mvn/version "0.5.2"}
+        metosin/reitit-schema {:mvn/version "0.5.2"}
         org.webjars/swagger-ui {:mvn/version "3.27.0"}
+        metosin/muuntaja {:mvn/version "0.6.7"}
         }
  :paths ["src" "resources"]
  }

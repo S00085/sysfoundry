@@ -3,17 +3,18 @@
   (:require [honeysql.core :as sql]
             [honeysql.helpers :as h]
             [honeysql.format :as f]
+            [org.sysfoundry.dc.namespace :as dcns]
             [org.sysfoundry.gen.comms :as comms]))
 
 (def namespace-key :rms/namespace)
 (def account-key :ac_id)
 
 (def ns-def-replacements
-  {:sf.dc.ns/name :name
-   :sf.dc.ns/id :id
-   :sf.dc.ns/doc :doc
-   :sf.dc.ns/active :active
-   :sf.dc.ns/ac_id :ac_id})
+  {::dcns/name :name
+   ::dcns/id :id
+   ::dcns/doc :doc
+   ::dcns/active :active
+   ::dcns/ac_id :ac_id})
 
 (defn- ns-key-replace-fn
   [item]
@@ -121,11 +122,3 @@
     (-> (insert-sql account namespace-key att-keys)
         (h/values att-vals-ls)
         fmt)))
-
-(comment
-  (def rule-def-example {:sf.dc.ns/name "test"
-                         :sf.dc.rule/name "rule-name"
-                         :sf.dc.rule/active true
-                         :sf.dc.rule/doc "Rule documentation"
-                         :sf.dc.rule/definition "{}"}))
-

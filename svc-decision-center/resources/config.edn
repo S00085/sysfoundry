@@ -11,8 +11,10 @@
                                   }
   
   :org.sysfoundry.dc.pgdb.namespace-repo/pgdb-namespace-repo {:datasource #ig/ref :org.sysfoundry.jdbc.cp/hikari-cp}
+  
+  :org.sysfoundry.dc.svc/middleware {:namespace-repo #ig/ref :org.sysfoundry.dc.pgdb.namespace-repo/pgdb-namespace-repo}
 
-  :org.sysfoundry.oas.v3/request-handler nil ;;lets use the defaults for now
+  :org.sysfoundry.oas.v3/request-handler {:middleware #ig/ref :org.sysfoundry.dc.svc/middleware} 
      
   :org.sysfoundry.http.server/listener {:org.sysfoundry.http.server/request-handler #ig/ref :org.sysfoundry.oas.v3/request-handler}
   }

@@ -5,6 +5,12 @@
             [taoensso.timbre :as log]
             [reitit.ring :as ring]
             [integrant.core :as ig]
+            [muuntaja.core :as m]
+            [reitit.ring.middleware.parameters :as middleware]
+            [reitit.ring.middleware.muuntaja :as muuntaja]
+            [schema.core :as s]
+            [reitit.coercion.schema :as rcs]
+            [reitit.ring.coercion :as rrc]
             )
   (:import (com.reprezen.kaizen.oasparser OpenApi3Parser))
   )
@@ -43,7 +49,53 @@
     )
   )
 
+(defn resolve-schema-def [schema-ref api-spec-model]
+  s/Any
+  )
 
+(defn get-type [type schema-ref api-spec-model]
+  (cond 
+    (= type "string") s/Str
+    (= type "integer") s/Int
+    (= type "boolean") s/Bool
+    (= type "array") [(s/conditional #(keyword? %) s/Keyword #(string? %) s/Str)]
+    (= type :none) (resolve-schema-def schema-ref api-spec-model)
+    )
+  )
+
+(defn get-parameters [method method-map api-spec-model]
+  (let [parameters (get-in method-map [method :parameters] :none)]
+    (if-not (= :none parameters)
+      (loop [parameter-def (first parameters)
+             remaining-parameters (rest parameters)
+             parameter-map (transient {})
+             ]
+        (if (nil? parameter-def)
+          {:parameters (persistent! parameter-map)}
+          (let [in (keyword (:in parameter-def))
+                name (keyword (:name parameter-def))
+                required (get-in parameter-def [:required] false)
+                type (get-in parameter-def [:schema :type] :none)
+                schema-ref (get-in parameter-def [:schema :$ref])
+                in-map (get-in parameter-map [in] {})
+                final-in-map (assoc in-map (if required 
+                                             name
+                                             (s/optional-key name)
+                                             ) (get-type type schema-ref api-spec-model))]
+            (recur (first remaining-parameters)
+                   (rest remaining-parameters)
+                   (assoc! parameter-map in final-in-map))))
+        )
+      :none)
+    )
+  )
+
+(defn get-default-handler [operation-id]
+  (fn [_]
+    (let [reason-message (str "Operation Id '" operation-id "' could not be resolved to a handler function!")]
+      {:status 404 :headers {"reason" reason-message}})
+    )
+  )
 
 (defn get-method-handler [method method-map]
   (let [operation-id (get-in method-map [method :operationId] :none)
@@ -51,13 +103,14 @@
         ]
     (if-not (= :none operation-id)
       (if (nil? resolved-handler)
-        (throw (ex-info (str "Operation Id : '" operation-id "' could not be resolved to a handler function!") {:operationId operation-id}))
+        {:handler (get-default-handler operation-id)}
+        ;(throw (ex-info (str "Operation Id : '" operation-id "' could not be resolved to a handler function!") {:operationId operation-id}))
         {:handler resolved-handler})
       (throw (ex-info (str "No operationId defined for method " method ", or no method found!") {:method method})))
     )
   )
 
-(defn get-route-data [path method-map]
+(defn get-route-data [path method-map api-spec-model]
   (let [methods (keys method-map)]
     (loop [method (first methods) remaining-methods (rest methods)
            final-method-map (transient {})
@@ -66,8 +119,17 @@
         (let [method-handler (try (get-method-handler method method-map)
                                   (catch Exception e
                                     {:error (.getMessage e)
-                                     :data (ex-data e)}))]
-          (recur (first remaining-methods) (rest remaining-methods) (assoc! final-method-map method method-handler)))
+                                     :data (ex-data e)}))
+              parameters (get-parameters method method-map api-spec-model)
+              method-val-map (if-not (= :none parameters)
+                               (merge method-handler parameters)
+                               method-handler
+                               )
+              final-method-val-map (assoc method-val-map
+                                          :coercion rcs/coercion
+                                          )
+              ]
+          (recur (first remaining-methods) (rest remaining-methods) (assoc! final-method-map method final-method-val-map)))
         [path (persistent! final-method-map)])
       )
     )
@@ -108,7 +170,7 @@
   ([api-spec-model]
    (let [api-model (:oas3/edn api-spec-model)]
      (->> (keys (:paths api-model))
-          (map #(get-route-data % (get-in api-model [:paths %])))
+          (map #(get-route-data % (get-in api-model [:paths %]) api-model))
           (map #(filter-invalid-methods %))
           (filter #(do %)) ;filter nils
           vec)))
@@ -145,9 +207,16 @@
         api-spec-model (open-api-model (check-resource (:spec-resource-name final-service-config))
                                        (:validate? final-service-config))
         routes (get-routes api-spec-model apidoc-endpoint swagger-ui-path)
+        standard-middleware [middleware/parameters-middleware
+                             muuntaja/format-middleware
+                             rrc/coerce-exceptions-middleware
+                             rrc/coerce-request-middleware]
+        additional-middleware (get-in final-service-config [:middleware] [])
+        final-middleware (into [] (concat standard-middleware additional-middleware))
         ]
     (log/debug "Routes -> " routes)
-    (ring/ring-handler (ring/router routes) 
+    (ring/ring-handler (ring/router routes {:data {:muuntaja m/instance
+                                                   :middleware final-middleware}}) 
                        (ring/create-default-handler))
     )
   )
